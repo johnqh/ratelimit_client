@@ -69,6 +69,9 @@ export default [
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-non-null-assertion': 'warn',
+      // Disable type-aware rules for now to avoid config complexity
+      // '@typescript-eslint/prefer-nullish-coalescing': 'error',
+      // '@typescript-eslint/prefer-optional-chain': 'error',
 
       // Import organization
       'sort-imports': [
@@ -93,6 +96,7 @@ export default [
       parserOptions: {
         ecmaVersion: 2020,
         sourceType: 'module',
+        // Don't use project for test files
         ecmaFeatures: {
           jsx: true,
         },
