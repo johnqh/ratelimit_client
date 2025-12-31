@@ -7,5 +7,6 @@ if (typeof document === 'undefined') {
   // Use type assertion via unknown to avoid DOMWindow incompatibility
   (globalThis as unknown as Record<string, unknown>).window = window;
   (globalThis as unknown as Record<string, unknown>).document = window.document;
-  (globalThis as unknown as Record<string, unknown>).navigator = window.navigator;
+  (globalThis as unknown as Record<string, unknown>).navigator =
+    window.navigator;
 }
