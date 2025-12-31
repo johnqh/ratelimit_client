@@ -18,6 +18,7 @@
     "prepublishOnly": "bun run clean && bun run build",
     "test": "bunx vitest",
     "test:run": "bunx vitest run",
+    "test:unit": "bunx vitest run",
     "lint": "bunx eslint src --ext .ts,.tsx",
     "lint:fix": "bunx eslint src --ext .ts,.tsx --fix",
     "format": "bunx prettier --write src/**/*.ts",
