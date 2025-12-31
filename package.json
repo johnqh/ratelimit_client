@@ -1,6 +1,6 @@
 {
   "name": "@sudobility/ratelimit_client",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "React client library for Rate Limit API with TanStack Query hooks",
   "type": "module",
   "main": "dist/index.js",

@@ -1,6 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
+import '../test/setupDom';
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MockNetworkClient } from '@sudobility/di/mocks';
