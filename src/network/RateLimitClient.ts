@@ -36,7 +36,7 @@ export class RateLimitClient {
 
   /**
    * Get rate limit configuration and current usage
-   * GET /ratelimits
+   * GET /api/v1/ratelimits
    */
   async getRateLimitsConfig(
     token: FirebaseIdToken
@@ -45,7 +45,7 @@ export class RateLimitClient {
 
     const response = await this.networkClient.get<
       BaseResponse<RateLimitsConfigData>
-    >(buildUrl(this.baseUrl, '/ratelimits'), {
+    >(buildUrl(this.baseUrl, '/api/v1/ratelimits'), {
       headers,
     });
 
@@ -62,7 +62,7 @@ export class RateLimitClient {
 
   /**
    * Get rate limit usage history for a specific period type
-   * GET /ratelimits/history/:periodType
+   * GET /api/v1/ratelimits/history/:periodType
    *
    * @param periodType - 'hour', 'day', or 'month'
    * @param token - Firebase ID token
@@ -78,7 +78,7 @@ export class RateLimitClient {
     >(
       buildUrl(
         this.baseUrl,
-        `/ratelimits/history/${encodeURIComponent(periodType)}`
+        `/api/v1/ratelimits/history/${encodeURIComponent(periodType)}`
       ),
       { headers }
     );

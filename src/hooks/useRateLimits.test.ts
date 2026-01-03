@@ -43,7 +43,7 @@ describe('useRateLimits', () => {
       };
 
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/ratelimits',
+        'https://api.example.com/api/v1/ratelimits',
         {
           ok: true,
           data: {
@@ -69,7 +69,7 @@ describe('useRateLimits', () => {
 
     it('should handle API error response', async () => {
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/ratelimits',
+        'https://api.example.com/api/v1/ratelimits',
         {
           ok: true,
           data: {
@@ -98,7 +98,7 @@ describe('useRateLimits', () => {
         .mockImplementation(() => {});
 
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/ratelimits',
+        'https://api.example.com/api/v1/ratelimits',
         {
           error: new Error('Network error'),
         },
@@ -130,7 +130,7 @@ describe('useRateLimits', () => {
       };
 
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/ratelimits/history/hour',
+        'https://api.example.com/api/v1/ratelimits/history/hour',
         {
           ok: true,
           data: {
@@ -156,7 +156,7 @@ describe('useRateLimits', () => {
 
     it('should handle history API error response', async () => {
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/ratelimits/history/hour',
+        'https://api.example.com/api/v1/ratelimits/history/hour',
         {
           ok: true,
           data: {
@@ -185,7 +185,7 @@ describe('useRateLimits', () => {
         .mockImplementation(() => {});
 
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/ratelimits/history/month',
+        'https://api.example.com/api/v1/ratelimits/history/month',
         {
           error: new Error('Connection failed'),
         },
@@ -213,7 +213,7 @@ describe('useRateLimits', () => {
         .mockImplementation(() => {});
 
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/ratelimits',
+        'https://api.example.com/api/v1/ratelimits',
         {
           error: new Error('Some error'),
         },
@@ -244,7 +244,7 @@ describe('useRateLimits', () => {
       const mockConfigData = { limits: {} };
 
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/ratelimits',
+        'https://api.example.com/api/v1/ratelimits',
         {
           ok: true,
           data: {

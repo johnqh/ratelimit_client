@@ -26,7 +26,7 @@ describe('RateLimitClient', () => {
       };
 
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/ratelimits',
+        'https://api.example.com/api/v1/ratelimits',
         {
           ok: true,
           data: {
@@ -43,7 +43,7 @@ describe('RateLimitClient', () => {
       });
       const result = await client.getRateLimitsConfig(token);
 
-      expect(mockNetworkClient.wasUrlCalled('https://api.example.com/ratelimits', 'GET')).toBe(true);
+      expect(mockNetworkClient.wasUrlCalled('https://api.example.com/api/v1/ratelimits', 'GET')).toBe(true);
 
       const lastRequest = mockNetworkClient.getLastRequest();
       expect(lastRequest?.options?.headers).toMatchObject({
@@ -56,7 +56,7 @@ describe('RateLimitClient', () => {
 
     it('should throw error when response is not ok', async () => {
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/ratelimits',
+        'https://api.example.com/api/v1/ratelimits',
         {
           ok: false,
           data: { error: 'Unauthorized' },
@@ -76,7 +76,7 @@ describe('RateLimitClient', () => {
 
     it('should throw error when response data is missing', async () => {
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/ratelimits',
+        'https://api.example.com/api/v1/ratelimits',
         {
           ok: true,
           data: undefined,
@@ -106,7 +106,7 @@ describe('RateLimitClient', () => {
       };
 
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/ratelimits/history/hour',
+        'https://api.example.com/api/v1/ratelimits/history/hour',
         {
           ok: true,
           data: {
@@ -125,7 +125,7 @@ describe('RateLimitClient', () => {
 
       expect(
         mockNetworkClient.wasUrlCalled(
-          'https://api.example.com/ratelimits/history/hour',
+          'https://api.example.com/api/v1/ratelimits/history/hour',
           'GET'
         )
       ).toBe(true);
@@ -141,7 +141,7 @@ describe('RateLimitClient', () => {
 
     it('should fetch rate limit history for day period', async () => {
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/ratelimits/history/day',
+        'https://api.example.com/api/v1/ratelimits/history/day',
         {
           ok: true,
           data: {
@@ -160,7 +160,7 @@ describe('RateLimitClient', () => {
 
       expect(
         mockNetworkClient.wasUrlCalled(
-          'https://api.example.com/ratelimits/history/day',
+          'https://api.example.com/api/v1/ratelimits/history/day',
           'GET'
         )
       ).toBe(true);
@@ -168,7 +168,7 @@ describe('RateLimitClient', () => {
 
     it('should fetch rate limit history for month period', async () => {
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/ratelimits/history/month',
+        'https://api.example.com/api/v1/ratelimits/history/month',
         {
           ok: true,
           data: {
@@ -187,7 +187,7 @@ describe('RateLimitClient', () => {
 
       expect(
         mockNetworkClient.wasUrlCalled(
-          'https://api.example.com/ratelimits/history/month',
+          'https://api.example.com/api/v1/ratelimits/history/month',
           'GET'
         )
       ).toBe(true);
@@ -195,7 +195,7 @@ describe('RateLimitClient', () => {
 
     it('should throw error when history response is not ok', async () => {
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/ratelimits/history/hour',
+        'https://api.example.com/api/v1/ratelimits/history/hour',
         {
           ok: false,
           data: { message: 'Invalid period type' },
