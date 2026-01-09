@@ -111,7 +111,11 @@ export const useRateLimits = (
       setError(null);
 
       try {
-        const response = await client.getRateLimitHistory(periodType, token, entitySlug);
+        const response = await client.getRateLimitHistory(
+          periodType,
+          token,
+          entitySlug
+        );
         if (response.success && response.data) {
           setHistory(response.data);
         } else {

@@ -46,7 +46,9 @@ export class RateLimitClient {
     entitySlug?: string
   ): Promise<BaseResponse<RateLimitsConfigData>> {
     const headers = createAuthHeaders(token);
-    const queryParams = entitySlug ? `?entitySlug=${encodeURIComponent(entitySlug)}` : '';
+    const queryParams = entitySlug
+      ? `?entitySlug=${encodeURIComponent(entitySlug)}`
+      : '';
 
     const response = await this.networkClient.get<
       BaseResponse<RateLimitsConfigData>
@@ -79,7 +81,9 @@ export class RateLimitClient {
     entitySlug?: string
   ): Promise<BaseResponse<RateLimitHistoryData>> {
     const headers = createAuthHeaders(token);
-    const queryParams = entitySlug ? `?entitySlug=${encodeURIComponent(entitySlug)}` : '';
+    const queryParams = entitySlug
+      ? `?entitySlug=${encodeURIComponent(entitySlug)}`
+      : '';
 
     const response = await this.networkClient.get<
       BaseResponse<RateLimitHistoryData>

@@ -93,6 +93,72 @@ describe('RateLimitClient', () => {
         'Failed to get rate limits config'
       );
     });
+
+    it('should include entitySlug as query parameter when provided', async () => {
+      const mockConfigData = {
+        limits: {
+          hour: { limit: 100, remaining: 50, resetAt: '2024-01-01T01:00:00Z' },
+        },
+      };
+
+      mockNetworkClient.setMockResponse(
+        'https://api.example.com/api/v1/ratelimits?entitySlug=my-org',
+        {
+          ok: true,
+          data: {
+            success: true,
+            data: mockConfigData,
+          },
+        },
+        'GET'
+      );
+
+      const client = new RateLimitClient({
+        baseUrl,
+        networkClient: mockNetworkClient,
+      });
+      await client.getRateLimitsConfig(token, 'my-org');
+
+      expect(
+        mockNetworkClient.wasUrlCalled(
+          'https://api.example.com/api/v1/ratelimits?entitySlug=my-org',
+          'GET'
+        )
+      ).toBe(true);
+    });
+
+    it('should encode special characters in entitySlug', async () => {
+      const mockConfigData = {
+        limits: {
+          hour: { limit: 100, remaining: 50, resetAt: '2024-01-01T01:00:00Z' },
+        },
+      };
+
+      mockNetworkClient.setMockResponse(
+        'https://api.example.com/api/v1/ratelimits?entitySlug=my%20org%2Ftest',
+        {
+          ok: true,
+          data: {
+            success: true,
+            data: mockConfigData,
+          },
+        },
+        'GET'
+      );
+
+      const client = new RateLimitClient({
+        baseUrl,
+        networkClient: mockNetworkClient,
+      });
+      await client.getRateLimitsConfig(token, 'my org/test');
+
+      expect(
+        mockNetworkClient.wasUrlCalled(
+          'https://api.example.com/api/v1/ratelimits?entitySlug=my%20org%2Ftest',
+          'GET'
+        )
+      ).toBe(true);
+    });
   });
 
   describe('getRateLimitHistory', () => {
@@ -211,6 +277,90 @@ describe('RateLimitClient', () => {
       await expect(client.getRateLimitHistory('hour', token)).rejects.toThrow(
         'Failed to get rate limit history: Invalid period type'
       );
+    });
+
+    it('should throw error when history response data is missing', async () => {
+      mockNetworkClient.setMockResponse(
+        'https://api.example.com/api/v1/ratelimits/history/hour',
+        {
+          ok: true,
+          data: undefined,
+        },
+        'GET'
+      );
+
+      const client = new RateLimitClient({
+        baseUrl,
+        networkClient: mockNetworkClient,
+      });
+
+      await expect(client.getRateLimitHistory('hour', token)).rejects.toThrow(
+        'Failed to get rate limit history'
+      );
+    });
+
+    it('should include entitySlug as query parameter when provided', async () => {
+      const mockHistoryData = {
+        periodType: 'hour',
+        history: [],
+      };
+
+      mockNetworkClient.setMockResponse(
+        'https://api.example.com/api/v1/ratelimits/history/hour?entitySlug=my-org',
+        {
+          ok: true,
+          data: {
+            success: true,
+            data: mockHistoryData,
+          },
+        },
+        'GET'
+      );
+
+      const client = new RateLimitClient({
+        baseUrl,
+        networkClient: mockNetworkClient,
+      });
+      await client.getRateLimitHistory('hour', token, 'my-org');
+
+      expect(
+        mockNetworkClient.wasUrlCalled(
+          'https://api.example.com/api/v1/ratelimits/history/hour?entitySlug=my-org',
+          'GET'
+        )
+      ).toBe(true);
+    });
+
+    it('should encode special characters in entitySlug and periodType', async () => {
+      const mockHistoryData = {
+        periodType: 'day',
+        history: [],
+      };
+
+      mockNetworkClient.setMockResponse(
+        'https://api.example.com/api/v1/ratelimits/history/day?entitySlug=test%2Forg',
+        {
+          ok: true,
+          data: {
+            success: true,
+            data: mockHistoryData,
+          },
+        },
+        'GET'
+      );
+
+      const client = new RateLimitClient({
+        baseUrl,
+        networkClient: mockNetworkClient,
+      });
+      await client.getRateLimitHistory('day', token, 'test/org');
+
+      expect(
+        mockNetworkClient.wasUrlCalled(
+          'https://api.example.com/api/v1/ratelimits/history/day?entitySlug=test%2Forg',
+          'GET'
+        )
+      ).toBe(true);
     });
   });
 });
