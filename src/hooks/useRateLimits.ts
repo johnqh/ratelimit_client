@@ -25,7 +25,10 @@ export interface UseRateLimitsReturn {
   error: Optional<string>;
 
   /** Refresh rate limits configuration */
-  refreshConfig: (token: FirebaseIdToken, rateLimitUserId: string) => Promise<void>;
+  refreshConfig: (
+    token: FirebaseIdToken,
+    rateLimitUserId: string
+  ) => Promise<void>;
 
   /** Refresh rate limit history for a period type */
   refreshHistory: (
@@ -71,7 +74,10 @@ export const useRateLimits = (
       setError(null);
 
       try {
-        const response = await client.getRateLimitsConfig(token, rateLimitUserId);
+        const response = await client.getRateLimitsConfig(
+          token,
+          rateLimitUserId
+        );
         if (response.success && response.data) {
           setConfig(response.data);
         } else {
