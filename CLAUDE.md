@@ -34,8 +34,7 @@ src/
 bun run build        # Build to dist/
 bun run build:watch  # Watch mode build
 bun run clean        # Remove dist/
-bun run test         # Run Vitest (watch mode)
-bun run test:run     # Run tests once
+bun run test         # Run Vitest tests
 bun run lint         # Run ESLint
 bun run lint:fix     # Fix lint issues
 bun run typecheck    # TypeScript check
@@ -51,13 +50,13 @@ import { RateLimitClient } from '@sudobility/ratelimit_client';
 const client = new RateLimitClient({ baseUrl, networkClient });
 
 // Get rate limit config and current usage
-const config = await client.getRateLimitsConfig(token);
-const config = await client.getRateLimitsConfig(token, entitySlug);
+// rateLimitUserId is required (e.g., entity slug, user ID)
+const config = await client.getRateLimitsConfig(token, rateLimitUserId);
 
 // Get usage history by period
-const history = await client.getRateLimitHistory('hour', token);
-const history = await client.getRateLimitHistory('day', token, entitySlug);
-const history = await client.getRateLimitHistory('month', token);
+const history = await client.getRateLimitHistory('hour', token, rateLimitUserId);
+const history = await client.getRateLimitHistory('day', token, rateLimitUserId);
+const history = await client.getRateLimitHistory('month', token, rateLimitUserId);
 ```
 
 ## Hooks
@@ -78,37 +77,33 @@ const {
   reset,            // Reset all state
 } = useRateLimits(networkClient, baseUrl);
 
-// Fetch config
-await refreshConfig(token);
-await refreshConfig(token, entitySlug);
+// Fetch config (rateLimitUserId is required)
+await refreshConfig(token, rateLimitUserId);
 
-// Fetch history
-await refreshHistory('hour', token);
-await refreshHistory('day', token, entitySlug);
+// Fetch history (rateLimitUserId is required)
+await refreshHistory('hour', token, rateLimitUserId);
+await refreshHistory('day', token, rateLimitUserId);
 ```
 
 ## API Endpoints
 
+The `rateLimitUserId` is a generic identifier that can be an entity slug, user ID, or any other identifier depending on the application.
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/v1/ratelimits` | Get rate limit config and current usage |
-| GET | `/api/v1/ratelimits?entitySlug=x` | Get config for specific entity |
-| GET | `/api/v1/ratelimits/history/:periodType` | Get usage history (hour/day/month) |
+| GET | `/api/v1/ratelimits/:rateLimitUserId` | Get rate limit config and current usage |
+| GET | `/api/v1/ratelimits/:rateLimitUserId/history/:periodType` | Get usage history (hour/day/month) |
 
 ## Types
 
-```typescript
-interface RateLimitConfig {
-  currentUsage: { hourly: number; daily: number; monthly: number };
-  currentLimits: { hourly: number; daily: number; monthly: number };
-  currentEntitlement: string;
-  tiers: RateLimitTier[];
-}
+Types are imported from `@sudobility/types`:
 
-interface RateLimitHistory {
-  periodType: 'hour' | 'day' | 'month';
-  history: { timestamp: string; usage: number }[];
-}
+```typescript
+import type {
+  RateLimitsConfigData,
+  RateLimitHistoryData,
+  RateLimitPeriodType,
+} from '@sudobility/types';
 ```
 
 ## Peer Dependencies
@@ -116,6 +111,7 @@ interface RateLimitHistory {
 Required in consuming app:
 - `react` >= 18.0.0
 - `@sudobility/types` - Common types
+- `@sudobility/di` - NetworkClient interface
 
 ## Publishing
 
@@ -140,12 +136,11 @@ sudojo_app (frontend)
 Uses Vitest with mock network client:
 
 ```bash
-bun run test         # Watch mode
-bun run test:run     # Single run
+bun run test         # Run tests
 ```
 
 Test coverage includes:
-- Config fetching with/without entity slug
+- Config fetching with rateLimitUserId
 - History fetching for all period types
 - Error handling (network errors, API errors)
 - URL encoding for special characters

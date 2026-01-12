@@ -10,6 +10,7 @@ import { useRateLimits } from './useRateLimits';
 describe('useRateLimits', () => {
   const baseUrl = 'https://api.example.com';
   const token = 'test-firebase-token';
+  const rateLimitUserId = 'my-entity';
   let mockNetworkClient: MockNetworkClient;
 
   beforeEach(() => {
@@ -43,7 +44,7 @@ describe('useRateLimits', () => {
       };
 
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/api/v1/ratelimits',
+        'https://api.example.com/api/v1/ratelimits/my-entity',
         {
           ok: true,
           data: {
@@ -59,7 +60,7 @@ describe('useRateLimits', () => {
       );
 
       await act(async () => {
-        await result.current.refreshConfig(token);
+        await result.current.refreshConfig(token, rateLimitUserId);
       });
 
       expect(result.current.config).toEqual(mockConfigData);
@@ -69,7 +70,7 @@ describe('useRateLimits', () => {
 
     it('should handle API error response', async () => {
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/api/v1/ratelimits',
+        'https://api.example.com/api/v1/ratelimits/my-entity',
         {
           ok: true,
           data: {
@@ -85,7 +86,7 @@ describe('useRateLimits', () => {
       );
 
       await act(async () => {
-        await result.current.refreshConfig(token);
+        await result.current.refreshConfig(token, rateLimitUserId);
       });
 
       expect(result.current.error).toBe('Rate limit exceeded');
@@ -98,7 +99,7 @@ describe('useRateLimits', () => {
         .mockImplementation(() => {});
 
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/api/v1/ratelimits',
+        'https://api.example.com/api/v1/ratelimits/my-entity',
         {
           error: new Error('Network error'),
         },
@@ -110,7 +111,7 @@ describe('useRateLimits', () => {
       );
 
       await act(async () => {
-        await result.current.refreshConfig(token);
+        await result.current.refreshConfig(token, rateLimitUserId);
       });
 
       expect(result.current.error).toBe('Network error');
@@ -130,7 +131,7 @@ describe('useRateLimits', () => {
       };
 
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/api/v1/ratelimits/history/hour',
+        'https://api.example.com/api/v1/ratelimits/my-entity/history/hour',
         {
           ok: true,
           data: {
@@ -146,7 +147,7 @@ describe('useRateLimits', () => {
       );
 
       await act(async () => {
-        await result.current.refreshHistory('hour', token);
+        await result.current.refreshHistory('hour', token, rateLimitUserId);
       });
 
       expect(result.current.history).toEqual(mockHistoryData);
@@ -156,7 +157,7 @@ describe('useRateLimits', () => {
 
     it('should handle history API error response', async () => {
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/api/v1/ratelimits/history/hour',
+        'https://api.example.com/api/v1/ratelimits/my-entity/history/hour',
         {
           ok: true,
           data: {
@@ -172,7 +173,7 @@ describe('useRateLimits', () => {
       );
 
       await act(async () => {
-        await result.current.refreshHistory('hour', token);
+        await result.current.refreshHistory('hour', token, rateLimitUserId);
       });
 
       expect(result.current.error).toBe('Invalid period type');
@@ -185,7 +186,7 @@ describe('useRateLimits', () => {
         .mockImplementation(() => {});
 
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/api/v1/ratelimits/history/month',
+        'https://api.example.com/api/v1/ratelimits/my-entity/history/month',
         {
           error: new Error('Connection failed'),
         },
@@ -197,7 +198,7 @@ describe('useRateLimits', () => {
       );
 
       await act(async () => {
-        await result.current.refreshHistory('month', token);
+        await result.current.refreshHistory('month', token, rateLimitUserId);
       });
 
       expect(result.current.error).toBe('Connection failed');
@@ -213,7 +214,7 @@ describe('useRateLimits', () => {
         .mockImplementation(() => {});
 
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/api/v1/ratelimits',
+        'https://api.example.com/api/v1/ratelimits/my-entity',
         {
           error: new Error('Some error'),
         },
@@ -225,7 +226,7 @@ describe('useRateLimits', () => {
       );
 
       await act(async () => {
-        await result.current.refreshConfig(token);
+        await result.current.refreshConfig(token, rateLimitUserId);
       });
 
       expect(result.current.error).toBe('Some error');
@@ -244,7 +245,7 @@ describe('useRateLimits', () => {
       const mockConfigData = { limits: {} };
 
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/api/v1/ratelimits',
+        'https://api.example.com/api/v1/ratelimits/my-entity',
         {
           ok: true,
           data: {
@@ -260,7 +261,7 @@ describe('useRateLimits', () => {
       );
 
       await act(async () => {
-        await result.current.refreshConfig(token);
+        await result.current.refreshConfig(token, rateLimitUserId);
       });
 
       expect(result.current.config).toEqual(mockConfigData);

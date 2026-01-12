@@ -5,6 +5,7 @@ import { RateLimitClient } from './RateLimitClient';
 describe('RateLimitClient', () => {
   const baseUrl = 'https://api.example.com';
   const token = 'test-firebase-token';
+  const rateLimitUserId = 'my-entity';
   let mockNetworkClient: MockNetworkClient;
 
   beforeEach(() => {
@@ -26,7 +27,7 @@ describe('RateLimitClient', () => {
       };
 
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/api/v1/ratelimits',
+        'https://api.example.com/api/v1/ratelimits/my-entity',
         {
           ok: true,
           data: {
@@ -41,9 +42,14 @@ describe('RateLimitClient', () => {
         baseUrl,
         networkClient: mockNetworkClient,
       });
-      const result = await client.getRateLimitsConfig(token);
+      const result = await client.getRateLimitsConfig(token, rateLimitUserId);
 
-      expect(mockNetworkClient.wasUrlCalled('https://api.example.com/api/v1/ratelimits', 'GET')).toBe(true);
+      expect(
+        mockNetworkClient.wasUrlCalled(
+          'https://api.example.com/api/v1/ratelimits/my-entity',
+          'GET'
+        )
+      ).toBe(true);
 
       const lastRequest = mockNetworkClient.getLastRequest();
       expect(lastRequest?.options?.headers).toMatchObject({
@@ -56,7 +62,7 @@ describe('RateLimitClient', () => {
 
     it('should throw error when response is not ok', async () => {
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/api/v1/ratelimits',
+        'https://api.example.com/api/v1/ratelimits/my-entity',
         {
           ok: false,
           data: { error: 'Unauthorized' },
@@ -69,14 +75,14 @@ describe('RateLimitClient', () => {
         networkClient: mockNetworkClient,
       });
 
-      await expect(client.getRateLimitsConfig(token)).rejects.toThrow(
-        'Failed to get rate limits config: Unauthorized'
-      );
+      await expect(
+        client.getRateLimitsConfig(token, rateLimitUserId)
+      ).rejects.toThrow('Failed to get rate limits config: Unauthorized');
     });
 
     it('should throw error when response data is missing', async () => {
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/api/v1/ratelimits',
+        'https://api.example.com/api/v1/ratelimits/my-entity',
         {
           ok: true,
           data: undefined,
@@ -89,12 +95,12 @@ describe('RateLimitClient', () => {
         networkClient: mockNetworkClient,
       });
 
-      await expect(client.getRateLimitsConfig(token)).rejects.toThrow(
-        'Failed to get rate limits config'
-      );
+      await expect(
+        client.getRateLimitsConfig(token, rateLimitUserId)
+      ).rejects.toThrow('Failed to get rate limits config');
     });
 
-    it('should include entitySlug as query parameter when provided', async () => {
+    it('should encode special characters in rateLimitUserId', async () => {
       const mockConfigData = {
         limits: {
           hour: { limit: 100, remaining: 50, resetAt: '2024-01-01T01:00:00Z' },
@@ -102,40 +108,7 @@ describe('RateLimitClient', () => {
       };
 
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/api/v1/ratelimits?entitySlug=my-org',
-        {
-          ok: true,
-          data: {
-            success: true,
-            data: mockConfigData,
-          },
-        },
-        'GET'
-      );
-
-      const client = new RateLimitClient({
-        baseUrl,
-        networkClient: mockNetworkClient,
-      });
-      await client.getRateLimitsConfig(token, 'my-org');
-
-      expect(
-        mockNetworkClient.wasUrlCalled(
-          'https://api.example.com/api/v1/ratelimits?entitySlug=my-org',
-          'GET'
-        )
-      ).toBe(true);
-    });
-
-    it('should encode special characters in entitySlug', async () => {
-      const mockConfigData = {
-        limits: {
-          hour: { limit: 100, remaining: 50, resetAt: '2024-01-01T01:00:00Z' },
-        },
-      };
-
-      mockNetworkClient.setMockResponse(
-        'https://api.example.com/api/v1/ratelimits?entitySlug=my%20org%2Ftest',
+        'https://api.example.com/api/v1/ratelimits/my%20org%2Ftest',
         {
           ok: true,
           data: {
@@ -154,7 +127,7 @@ describe('RateLimitClient', () => {
 
       expect(
         mockNetworkClient.wasUrlCalled(
-          'https://api.example.com/api/v1/ratelimits?entitySlug=my%20org%2Ftest',
+          'https://api.example.com/api/v1/ratelimits/my%20org%2Ftest',
           'GET'
         )
       ).toBe(true);
@@ -172,7 +145,7 @@ describe('RateLimitClient', () => {
       };
 
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/api/v1/ratelimits/history/hour',
+        'https://api.example.com/api/v1/ratelimits/my-entity/history/hour',
         {
           ok: true,
           data: {
@@ -187,11 +160,15 @@ describe('RateLimitClient', () => {
         baseUrl,
         networkClient: mockNetworkClient,
       });
-      const result = await client.getRateLimitHistory('hour', token);
+      const result = await client.getRateLimitHistory(
+        'hour',
+        token,
+        rateLimitUserId
+      );
 
       expect(
         mockNetworkClient.wasUrlCalled(
-          'https://api.example.com/api/v1/ratelimits/history/hour',
+          'https://api.example.com/api/v1/ratelimits/my-entity/history/hour',
           'GET'
         )
       ).toBe(true);
@@ -207,7 +184,7 @@ describe('RateLimitClient', () => {
 
     it('should fetch rate limit history for day period', async () => {
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/api/v1/ratelimits/history/day',
+        'https://api.example.com/api/v1/ratelimits/my-entity/history/day',
         {
           ok: true,
           data: {
@@ -222,11 +199,11 @@ describe('RateLimitClient', () => {
         baseUrl,
         networkClient: mockNetworkClient,
       });
-      await client.getRateLimitHistory('day', token);
+      await client.getRateLimitHistory('day', token, rateLimitUserId);
 
       expect(
         mockNetworkClient.wasUrlCalled(
-          'https://api.example.com/api/v1/ratelimits/history/day',
+          'https://api.example.com/api/v1/ratelimits/my-entity/history/day',
           'GET'
         )
       ).toBe(true);
@@ -234,7 +211,7 @@ describe('RateLimitClient', () => {
 
     it('should fetch rate limit history for month period', async () => {
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/api/v1/ratelimits/history/month',
+        'https://api.example.com/api/v1/ratelimits/my-entity/history/month',
         {
           ok: true,
           data: {
@@ -249,11 +226,11 @@ describe('RateLimitClient', () => {
         baseUrl,
         networkClient: mockNetworkClient,
       });
-      await client.getRateLimitHistory('month', token);
+      await client.getRateLimitHistory('month', token, rateLimitUserId);
 
       expect(
         mockNetworkClient.wasUrlCalled(
-          'https://api.example.com/api/v1/ratelimits/history/month',
+          'https://api.example.com/api/v1/ratelimits/my-entity/history/month',
           'GET'
         )
       ).toBe(true);
@@ -261,7 +238,7 @@ describe('RateLimitClient', () => {
 
     it('should throw error when history response is not ok', async () => {
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/api/v1/ratelimits/history/hour',
+        'https://api.example.com/api/v1/ratelimits/my-entity/history/hour',
         {
           ok: false,
           data: { message: 'Invalid period type' },
@@ -274,14 +251,14 @@ describe('RateLimitClient', () => {
         networkClient: mockNetworkClient,
       });
 
-      await expect(client.getRateLimitHistory('hour', token)).rejects.toThrow(
-        'Failed to get rate limit history: Invalid period type'
-      );
+      await expect(
+        client.getRateLimitHistory('hour', token, rateLimitUserId)
+      ).rejects.toThrow('Failed to get rate limit history: Invalid period type');
     });
 
     it('should throw error when history response data is missing', async () => {
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/api/v1/ratelimits/history/hour',
+        'https://api.example.com/api/v1/ratelimits/my-entity/history/hour',
         {
           ok: true,
           data: undefined,
@@ -294,51 +271,19 @@ describe('RateLimitClient', () => {
         networkClient: mockNetworkClient,
       });
 
-      await expect(client.getRateLimitHistory('hour', token)).rejects.toThrow(
-        'Failed to get rate limit history'
-      );
+      await expect(
+        client.getRateLimitHistory('hour', token, rateLimitUserId)
+      ).rejects.toThrow('Failed to get rate limit history');
     });
 
-    it('should include entitySlug as query parameter when provided', async () => {
-      const mockHistoryData = {
-        periodType: 'hour',
-        history: [],
-      };
-
-      mockNetworkClient.setMockResponse(
-        'https://api.example.com/api/v1/ratelimits/history/hour?entitySlug=my-org',
-        {
-          ok: true,
-          data: {
-            success: true,
-            data: mockHistoryData,
-          },
-        },
-        'GET'
-      );
-
-      const client = new RateLimitClient({
-        baseUrl,
-        networkClient: mockNetworkClient,
-      });
-      await client.getRateLimitHistory('hour', token, 'my-org');
-
-      expect(
-        mockNetworkClient.wasUrlCalled(
-          'https://api.example.com/api/v1/ratelimits/history/hour?entitySlug=my-org',
-          'GET'
-        )
-      ).toBe(true);
-    });
-
-    it('should encode special characters in entitySlug and periodType', async () => {
+    it('should encode special characters in rateLimitUserId and periodType', async () => {
       const mockHistoryData = {
         periodType: 'day',
         history: [],
       };
 
       mockNetworkClient.setMockResponse(
-        'https://api.example.com/api/v1/ratelimits/history/day?entitySlug=test%2Forg',
+        'https://api.example.com/api/v1/ratelimits/test%2Forg/history/day',
         {
           ok: true,
           data: {
@@ -357,7 +302,7 @@ describe('RateLimitClient', () => {
 
       expect(
         mockNetworkClient.wasUrlCalled(
-          'https://api.example.com/api/v1/ratelimits/history/day?entitySlug=test%2Forg',
+          'https://api.example.com/api/v1/ratelimits/test%2Forg/history/day',
           'GET'
         )
       ).toBe(true);

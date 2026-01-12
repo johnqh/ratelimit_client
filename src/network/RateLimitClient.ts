@@ -36,25 +36,28 @@ export class RateLimitClient {
 
   /**
    * Get rate limit configuration and current usage
-   * GET /api/v1/ratelimits
+   * GET /api/v1/ratelimits/:rateLimitUserId
    *
    * @param token - Firebase ID token
-   * @param entitySlug - Optional entity slug. If not provided, uses user's personal entity.
+   * @param rateLimitUserId - Identifier for rate limit lookup (e.g., entity slug, user ID)
    */
   async getRateLimitsConfig(
     token: FirebaseIdToken,
-    entitySlug?: string
+    rateLimitUserId: string
   ): Promise<BaseResponse<RateLimitsConfigData>> {
     const headers = createAuthHeaders(token);
-    const queryParams = entitySlug
-      ? `?entitySlug=${encodeURIComponent(entitySlug)}`
-      : '';
 
     const response = await this.networkClient.get<
       BaseResponse<RateLimitsConfigData>
-    >(buildUrl(this.baseUrl, `/api/v1/ratelimits${queryParams}`), {
-      headers,
-    });
+    >(
+      buildUrl(
+        this.baseUrl,
+        `/api/v1/ratelimits/${encodeURIComponent(rateLimitUserId)}`
+      ),
+      {
+        headers,
+      }
+    );
 
     if (!response.ok || !response.data) {
       throw handleApiError(response, 'get rate limits config');
@@ -69,28 +72,25 @@ export class RateLimitClient {
 
   /**
    * Get rate limit usage history for a specific period type
-   * GET /api/v1/ratelimits/history/:periodType
+   * GET /api/v1/ratelimits/:rateLimitUserId/history/:periodType
    *
    * @param periodType - 'hour', 'day', or 'month'
    * @param token - Firebase ID token
-   * @param entitySlug - Optional entity slug. If not provided, uses user's personal entity.
+   * @param rateLimitUserId - Identifier for rate limit lookup (e.g., entity slug, user ID)
    */
   async getRateLimitHistory(
     periodType: RateLimitPeriodType | 'hour' | 'day' | 'month',
     token: FirebaseIdToken,
-    entitySlug?: string
+    rateLimitUserId: string
   ): Promise<BaseResponse<RateLimitHistoryData>> {
     const headers = createAuthHeaders(token);
-    const queryParams = entitySlug
-      ? `?entitySlug=${encodeURIComponent(entitySlug)}`
-      : '';
 
     const response = await this.networkClient.get<
       BaseResponse<RateLimitHistoryData>
     >(
       buildUrl(
         this.baseUrl,
-        `/api/v1/ratelimits/history/${encodeURIComponent(periodType)}${queryParams}`
+        `/api/v1/ratelimits/${encodeURIComponent(rateLimitUserId)}/history/${encodeURIComponent(periodType)}`
       ),
       { headers }
     );

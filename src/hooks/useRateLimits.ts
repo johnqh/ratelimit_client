@@ -25,13 +25,13 @@ export interface UseRateLimitsReturn {
   error: Optional<string>;
 
   /** Refresh rate limits configuration */
-  refreshConfig: (token: FirebaseIdToken, entitySlug?: string) => Promise<void>;
+  refreshConfig: (token: FirebaseIdToken, rateLimitUserId: string) => Promise<void>;
 
   /** Refresh rate limit history for a period type */
   refreshHistory: (
     periodType: RateLimitPeriodType | 'hour' | 'day' | 'month',
     token: FirebaseIdToken,
-    entitySlug?: string
+    rateLimitUserId: string
   ) => Promise<void>;
 
   /** Clear error state */
@@ -63,15 +63,15 @@ export const useRateLimits = (
   /**
    * Refresh rate limits configuration
    * @param token - Firebase ID token
-   * @param entitySlug - Optional entity slug. If not provided, uses user's personal entity.
+   * @param rateLimitUserId - Identifier for rate limit lookup (e.g., entity slug, user ID)
    */
   const refreshConfig = useCallback(
-    async (token: FirebaseIdToken, entitySlug?: string): Promise<void> => {
+    async (token: FirebaseIdToken, rateLimitUserId: string): Promise<void> => {
       setIsLoadingConfig(true);
       setError(null);
 
       try {
-        const response = await client.getRateLimitsConfig(token, entitySlug);
+        const response = await client.getRateLimitsConfig(token, rateLimitUserId);
         if (response.success && response.data) {
           setConfig(response.data);
         } else {
@@ -99,13 +99,13 @@ export const useRateLimits = (
    * Refresh rate limit history for a period type
    * @param periodType - 'hour', 'day', or 'month'
    * @param token - Firebase ID token
-   * @param entitySlug - Optional entity slug. If not provided, uses user's personal entity.
+   * @param rateLimitUserId - Identifier for rate limit lookup (e.g., entity slug, user ID)
    */
   const refreshHistory = useCallback(
     async (
       periodType: RateLimitPeriodType | 'hour' | 'day' | 'month',
       token: FirebaseIdToken,
-      entitySlug?: string
+      rateLimitUserId: string
     ): Promise<void> => {
       setIsLoadingHistory(true);
       setError(null);
@@ -114,7 +114,7 @@ export const useRateLimits = (
         const response = await client.getRateLimitHistory(
           periodType,
           token,
-          entitySlug
+          rateLimitUserId
         );
         if (response.success && response.data) {
           setHistory(response.data);
