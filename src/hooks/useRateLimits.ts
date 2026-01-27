@@ -47,14 +47,19 @@ export interface UseRateLimitsReturn {
 /**
  * Hook for fetching rate limit configuration and history
  * Provides read-only access to rate limit data
+ *
+ * @param networkClient - Network client for making API requests
+ * @param baseUrl - Base URL of the API
+ * @param testMode - Optional flag to enable test/sandbox mode (appends testMode=true to requests)
  */
 export const useRateLimits = (
   networkClient: NetworkClient,
-  baseUrl: string
+  baseUrl: string,
+  testMode: boolean = false
 ): UseRateLimitsReturn => {
   const client = useMemo(
-    () => new RateLimitClient({ baseUrl, networkClient }),
-    [baseUrl, networkClient]
+    () => new RateLimitClient({ baseUrl, networkClient, testMode }),
+    [baseUrl, networkClient, testMode]
   );
 
   const [config, setConfig] = useState<Optional<RateLimitsConfigData>>(null);

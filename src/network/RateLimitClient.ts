@@ -24,10 +24,28 @@ interface BaseResponse<T> {
 export class RateLimitClient {
   private readonly baseUrl: string;
   private readonly networkClient: NetworkClient;
+  private readonly testMode: boolean;
 
-  constructor(config: { baseUrl: string; networkClient: NetworkClient }) {
+  constructor(config: {
+    baseUrl: string;
+    networkClient: NetworkClient;
+    testMode?: boolean;
+  }) {
     this.baseUrl = config.baseUrl;
     this.networkClient = config.networkClient;
+    this.testMode = config.testMode ?? false;
+  }
+
+  /**
+   * Build URL with optional test mode query param
+   */
+  private buildUrlWithTestMode(path: string): string {
+    const url = buildUrl(this.baseUrl, path);
+    if (this.testMode) {
+      const separator = url.includes('?') ? '&' : '?';
+      return `${url}${separator}testMode=true`;
+    }
+    return url;
   }
 
   // =============================================================================
@@ -50,8 +68,7 @@ export class RateLimitClient {
     const response = await this.networkClient.get<
       BaseResponse<RateLimitsConfigData>
     >(
-      buildUrl(
-        this.baseUrl,
+      this.buildUrlWithTestMode(
         `/api/v1/ratelimits/${encodeURIComponent(rateLimitUserId)}`
       ),
       {
@@ -88,8 +105,7 @@ export class RateLimitClient {
     const response = await this.networkClient.get<
       BaseResponse<RateLimitHistoryData>
     >(
-      buildUrl(
-        this.baseUrl,
+      this.buildUrlWithTestMode(
         `/api/v1/ratelimits/${encodeURIComponent(rateLimitUserId)}/history/${encodeURIComponent(periodType)}`
       ),
       { headers }
