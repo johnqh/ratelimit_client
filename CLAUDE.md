@@ -8,6 +8,7 @@ React client library for Rate Limit API with hooks for fetching rate limit confi
 
 - **Language**: TypeScript
 - **Runtime**: Bun
+- **Package Manager**: Bun (do not use npm/yarn/pnpm for installing dependencies)
 - **Build**: TypeScript compiler (tsc)
 - **Test**: Vitest
 
