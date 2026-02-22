@@ -145,3 +145,52 @@ Test coverage includes:
 - History fetching for all period types
 - Error handling (network errors, API errors)
 - URL encoding for special characters
+
+## Workspace Context
+
+This project is part of the **ShapeShyft** multi-project workspace at the parent directory. See `../CLAUDE.md` for the full architecture, dependency graph, and build order.
+
+## Downstream Impact
+
+| Downstream Consumer | Relationship |
+|---------------------|-------------|
+| `ratelimit_pages` | Direct dependency - uses `useRateLimits` hook |
+| `shapeshyft_app` | Transitive via ratelimit_pages, and direct dependency |
+
+After making changes:
+1. Run checks (no `verify` script - see below)
+2. `npm publish`
+3. In `ratelimit_pages`: `bun update @sudobility/ratelimit_client` -> rebuild
+4. In `shapeshyft_app`: `bun update @sudobility/ratelimit_client` -> rebuild
+
+## Local Dev Workflow
+
+```bash
+# In this project:
+bun link
+
+# In ratelimit_pages:
+bun link @sudobility/ratelimit_client
+
+# Rebuild after changes:
+bun run build
+
+# When done, unlink:
+bun unlink @sudobility/ratelimit_client && bun install
+```
+
+## Pre-Commit Checklist
+
+No `verify` script. Run checks manually:
+
+```bash
+bun run typecheck && bun run lint && bun run test && bun run build
+```
+
+Note: `bun run test` here runs once (not watch mode) due to `vitest run --environment jsdom`.
+
+## Gotchas
+
+- **`rateLimitUserId` is a generic identifier** -- it can be an entity slug, user ID, or any identifier. Do not assume it is always a Firebase UID.
+- **Tests require jsdom environment** -- the test script passes `--environment jsdom`. Tests run in a browser-like environment.
+- **Types come from `@sudobility/types`, not this package** -- `RateLimitsConfigData`, `RateLimitHistoryData`, etc. are in the shared types package.
