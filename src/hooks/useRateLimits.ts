@@ -10,47 +10,111 @@ import type { FirebaseIdToken } from '../types';
 import { RateLimitClient } from '../network/RateLimitClient';
 
 /**
- * Return type for useRateLimits hook
+ * Return type for the {@link useRateLimits} hook.
+ *
+ * @description Contains all state values and action functions returned by the
+ * `useRateLimits` hook. State includes the current rate limit configuration,
+ * usage history, loading indicators, and error messages. Actions include
+ * functions to refresh data, clear errors, and reset all state.
  */
 export interface UseRateLimitsReturn {
-  /** Current rate limits configuration and usage */
+  /** Current rate limits configuration and usage, or `null` if not yet fetched */
   config: Optional<RateLimitsConfigData>;
-  /** Rate limit history for selected period */
+  /** Rate limit usage history for the most recently fetched period, or `null` if not yet fetched */
   history: Optional<RateLimitHistoryData>;
-  /** Loading state for config fetch */
+  /** `true` while a config fetch is in progress */
   isLoadingConfig: boolean;
-  /** Loading state for history fetch */
+  /** `true` while a history fetch is in progress */
   isLoadingHistory: boolean;
-  /** Error message if any */
+  /** Error message from the most recent failed operation, or `null` if no error */
   error: Optional<string>;
 
-  /** Refresh rate limits configuration */
+  /**
+   * Fetches the rate limit configuration for the given user/entity.
+   *
+   * @description Triggers a `GET /api/v1/ratelimits/:rateLimitUserId` request.
+   * On success, updates `config` state. On failure, sets `error` state.
+   * Automatically clears any previous error before fetching.
+   *
+   * @param token - Firebase ID token for authentication
+   * @param rateLimitUserId - Identifier for rate limit lookup (e.g., entity slug, user ID)
+   */
   refreshConfig: (
     token: FirebaseIdToken,
     rateLimitUserId: string
   ) => Promise<void>;
 
-  /** Refresh rate limit history for a period type */
+  /**
+   * Fetches the rate limit usage history for a specific period type.
+   *
+   * @description Triggers a `GET /api/v1/ratelimits/:rateLimitUserId/history/:periodType` request.
+   * On success, updates `history` state. On failure, sets `error` state.
+   * Automatically clears any previous error before fetching.
+   *
+   * @param periodType - The time period granularity: `'hour'`, `'day'`, or `'month'`
+   * @param token - Firebase ID token for authentication
+   * @param rateLimitUserId - Identifier for rate limit lookup (e.g., entity slug, user ID)
+   */
   refreshHistory: (
     periodType: RateLimitPeriodType | 'hour' | 'day' | 'month',
     token: FirebaseIdToken,
     rateLimitUserId: string
   ) => Promise<void>;
 
-  /** Clear error state */
+  /** Clears the current error state, setting `error` to `null` */
   clearError: () => void;
 
-  /** Reset all state */
+  /** Resets all state to initial values (`null` for data/error, `false` for loading flags) */
   reset: () => void;
 }
 
 /**
- * Hook for fetching rate limit configuration and history
- * Provides read-only access to rate limit data
+ * React hook for fetching rate limit configuration and usage history.
  *
- * @param networkClient - Network client for making API requests
- * @param baseUrl - Base URL of the API
- * @param testMode - Optional flag to enable test/sandbox mode (appends testMode=true to requests)
+ * @description Provides read-only access to rate limit data through a
+ * simple state-based API. Internally creates and memoizes a {@link RateLimitClient}
+ * instance. All state transitions (loading, success, error) are handled
+ * automatically.
+ *
+ * The hook does not fetch data automatically on mount -- call `refreshConfig`
+ * and/or `refreshHistory` to trigger data fetching.
+ *
+ * @param networkClient - A `NetworkClient` instance for making HTTP requests
+ * @param baseUrl - Base URL of the Rate Limit API (e.g., `'https://api.example.com'`)
+ * @param testMode - When `true`, appends `testMode=true` query parameter to all
+ *   requests, enabling sandbox/test behavior on the server. Defaults to `false`.
+ * @returns An object containing rate limit state and action functions.
+ *   See {@link UseRateLimitsReturn} for the full return type.
+ *
+ * @example
+ * ```tsx
+ * import { useRateLimits } from '@sudobility/ratelimit_client';
+ *
+ * function RateLimitDashboard({ networkClient, baseUrl, token, entitySlug }) {
+ *   const {
+ *     config,
+ *     isLoadingConfig,
+ *     history,
+ *     isLoadingHistory,
+ *     error,
+ *     refreshConfig,
+ *     refreshHistory,
+ *     clearError,
+ *     reset,
+ *   } = useRateLimits(networkClient, baseUrl);
+ *
+ *   useEffect(() => {
+ *     refreshConfig(token, entitySlug);
+ *     refreshHistory('hour', token, entitySlug);
+ *   }, [token, entitySlug]);
+ *
+ *   if (isLoadingConfig) return <Text>Loading...</Text>;
+ *   if (error) return <Text>Error: {error}</Text>;
+ *   if (!config) return null;
+ *
+ *   return <Text>Remaining: {config.limits.hour.remaining}</Text>;
+ * }
+ * ```
  */
 export const useRateLimits = (
   networkClient: NetworkClient,

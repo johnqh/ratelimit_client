@@ -1,14 +1,14 @@
 # Improvement Plans for @sudobility/ratelimit_client
 
 ## Priority 1 - High Impact
-### 1. Add Tests
-- Test RateLimitClient API methods
-- Test useRateLimits hook with mocked responses
-- Test error handling and retry behavior
+### 1. Add Tests ✅ DONE
+- Test RateLimitClient API methods (25 tests: constructor, config, history, testMode, HTTP errors 401/404/500, network errors, URL encoding, headers)
+- Test useRateLimits hook with mocked responses (20 tests: init, config/history success/error, clearError, reset, testMode, memoization, error clearing)
+- Test helper functions (26 tests: createAuthHeaders, createHeaders, buildUrl, handleApiError, buildQueryString edge cases)
 
-### 2. Add JSDoc Documentation
-- Document all exported functions, hooks, and types
-- Add @example blocks for common usage patterns
+### 2. Add JSDoc Documentation ✅ DONE
+- Document all exported functions, hooks, and types with @param, @returns, @throws, @description
+- Add @example blocks for RateLimitClient, useRateLimits, QUERY_KEYS, and all utility functions
 
 ## Priority 2 - Medium Impact
 ### 3. Add Real-Time Rate Limit Updates

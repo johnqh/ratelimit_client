@@ -12,6 +12,25 @@ describe('RateLimitClient', () => {
     mockNetworkClient = new MockNetworkClient();
   });
 
+  describe('constructor', () => {
+    it('should create client with required config', () => {
+      const client = new RateLimitClient({
+        baseUrl,
+        networkClient: mockNetworkClient,
+      });
+      expect(client).toBeDefined();
+    });
+
+    it('should create client with testMode enabled', () => {
+      const client = new RateLimitClient({
+        baseUrl,
+        networkClient: mockNetworkClient,
+        testMode: true,
+      });
+      expect(client).toBeDefined();
+    });
+  });
+
   describe('getRateLimitsConfig', () => {
     it('should fetch rate limits config successfully', async () => {
       const mockConfigData = {
@@ -128,6 +147,142 @@ describe('RateLimitClient', () => {
       expect(
         mockNetworkClient.wasUrlCalled(
           'https://api.example.com/api/v1/ratelimits/my%20org%2Ftest',
+          'GET'
+        )
+      ).toBe(true);
+    });
+
+    it('should propagate network errors', async () => {
+      mockNetworkClient.setMockResponse(
+        'https://api.example.com/api/v1/ratelimits/my-entity',
+        {
+          error: new Error('Network connection refused'),
+        },
+        'GET'
+      );
+
+      const client = new RateLimitClient({
+        baseUrl,
+        networkClient: mockNetworkClient,
+      });
+
+      await expect(
+        client.getRateLimitsConfig(token, rateLimitUserId)
+      ).rejects.toThrow('Network connection refused');
+    });
+
+    it('should throw error for 401 Unauthorized response', async () => {
+      mockNetworkClient.setMockResponse(
+        'https://api.example.com/api/v1/ratelimits/my-entity',
+        {
+          ok: false,
+          status: 401,
+          data: { error: 'Invalid or expired token' },
+        },
+        'GET'
+      );
+
+      const client = new RateLimitClient({
+        baseUrl,
+        networkClient: mockNetworkClient,
+      });
+
+      await expect(
+        client.getRateLimitsConfig(token, rateLimitUserId)
+      ).rejects.toThrow(
+        'Failed to get rate limits config: Invalid or expired token'
+      );
+    });
+
+    it('should throw error for 404 Not Found response', async () => {
+      mockNetworkClient.setMockResponse(
+        'https://api.example.com/api/v1/ratelimits/my-entity',
+        {
+          ok: false,
+          status: 404,
+          data: { error: 'Rate limit configuration not found' },
+        },
+        'GET'
+      );
+
+      const client = new RateLimitClient({
+        baseUrl,
+        networkClient: mockNetworkClient,
+      });
+
+      await expect(
+        client.getRateLimitsConfig(token, rateLimitUserId)
+      ).rejects.toThrow(
+        'Failed to get rate limits config: Rate limit configuration not found'
+      );
+    });
+
+    it('should throw error for 500 Internal Server Error response', async () => {
+      mockNetworkClient.setMockResponse(
+        'https://api.example.com/api/v1/ratelimits/my-entity',
+        {
+          ok: false,
+          status: 500,
+          data: { error: 'Internal server error' },
+        },
+        'GET'
+      );
+
+      const client = new RateLimitClient({
+        baseUrl,
+        networkClient: mockNetworkClient,
+      });
+
+      await expect(
+        client.getRateLimitsConfig(token, rateLimitUserId)
+      ).rejects.toThrow(
+        'Failed to get rate limits config: Internal server error'
+      );
+    });
+
+    it('should include Content-Type and Accept headers', async () => {
+      mockNetworkClient.setMockResponse(
+        'https://api.example.com/api/v1/ratelimits/my-entity',
+        {
+          ok: true,
+          data: { success: true, data: { limits: {} } },
+        },
+        'GET'
+      );
+
+      const client = new RateLimitClient({
+        baseUrl,
+        networkClient: mockNetworkClient,
+      });
+      await client.getRateLimitsConfig(token, rateLimitUserId);
+
+      const lastRequest = mockNetworkClient.getLastRequest();
+      expect(lastRequest?.options?.headers).toMatchObject({
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        Authorization: 'Bearer test-firebase-token',
+      });
+    });
+
+    it('should handle baseUrl with trailing slash', async () => {
+      mockNetworkClient.setMockResponse(
+        'https://api.example.com/api/v1/ratelimits/my-entity',
+        {
+          ok: true,
+          data: { success: true, data: { limits: {} } },
+        },
+        'GET'
+      );
+
+      const client = new RateLimitClient({
+        baseUrl: 'https://api.example.com/',
+        networkClient: mockNetworkClient,
+      });
+      await client.getRateLimitsConfig(token, rateLimitUserId);
+
+      expect(
+        mockNetworkClient.wasUrlCalled(
+          'https://api.example.com/api/v1/ratelimits/my-entity',
           'GET'
         )
       ).toBe(true);
@@ -303,6 +458,174 @@ describe('RateLimitClient', () => {
       expect(
         mockNetworkClient.wasUrlCalled(
           'https://api.example.com/api/v1/ratelimits/test%2Forg/history/day',
+          'GET'
+        )
+      ).toBe(true);
+    });
+
+    it('should propagate network errors for history requests', async () => {
+      mockNetworkClient.setMockResponse(
+        'https://api.example.com/api/v1/ratelimits/my-entity/history/hour',
+        {
+          error: new Error('Request timeout'),
+        },
+        'GET'
+      );
+
+      const client = new RateLimitClient({
+        baseUrl,
+        networkClient: mockNetworkClient,
+      });
+
+      await expect(
+        client.getRateLimitHistory('hour', token, rateLimitUserId)
+      ).rejects.toThrow('Request timeout');
+    });
+
+    it('should throw error for 401 Unauthorized history response', async () => {
+      mockNetworkClient.setMockResponse(
+        'https://api.example.com/api/v1/ratelimits/my-entity/history/day',
+        {
+          ok: false,
+          status: 401,
+          data: { error: 'Token expired' },
+        },
+        'GET'
+      );
+
+      const client = new RateLimitClient({
+        baseUrl,
+        networkClient: mockNetworkClient,
+      });
+
+      await expect(
+        client.getRateLimitHistory('day', token, rateLimitUserId)
+      ).rejects.toThrow('Failed to get rate limit history: Token expired');
+    });
+
+    it('should throw error for 500 Internal Server Error history response', async () => {
+      mockNetworkClient.setMockResponse(
+        'https://api.example.com/api/v1/ratelimits/my-entity/history/month',
+        {
+          ok: false,
+          status: 500,
+          data: { error: 'Database unavailable' },
+        },
+        'GET'
+      );
+
+      const client = new RateLimitClient({
+        baseUrl,
+        networkClient: mockNetworkClient,
+      });
+
+      await expect(
+        client.getRateLimitHistory('month', token, rateLimitUserId)
+      ).rejects.toThrow(
+        'Failed to get rate limit history: Database unavailable'
+      );
+    });
+  });
+
+  describe('testMode', () => {
+    it('should append testMode=true to config URL when testMode is enabled', async () => {
+      mockNetworkClient.setMockResponse(
+        'https://api.example.com/api/v1/ratelimits/my-entity?testMode=true',
+        {
+          ok: true,
+          data: { success: true, data: { limits: {} } },
+        },
+        'GET'
+      );
+
+      const client = new RateLimitClient({
+        baseUrl,
+        networkClient: mockNetworkClient,
+        testMode: true,
+      });
+      await client.getRateLimitsConfig(token, rateLimitUserId);
+
+      expect(
+        mockNetworkClient.wasUrlCalled(
+          'https://api.example.com/api/v1/ratelimits/my-entity?testMode=true',
+          'GET'
+        )
+      ).toBe(true);
+    });
+
+    it('should append testMode=true to history URL when testMode is enabled', async () => {
+      mockNetworkClient.setMockResponse(
+        'https://api.example.com/api/v1/ratelimits/my-entity/history/hour?testMode=true',
+        {
+          ok: true,
+          data: {
+            success: true,
+            data: { periodType: 'hour', history: [] },
+          },
+        },
+        'GET'
+      );
+
+      const client = new RateLimitClient({
+        baseUrl,
+        networkClient: mockNetworkClient,
+        testMode: true,
+      });
+      await client.getRateLimitHistory('hour', token, rateLimitUserId);
+
+      expect(
+        mockNetworkClient.wasUrlCalled(
+          'https://api.example.com/api/v1/ratelimits/my-entity/history/hour?testMode=true',
+          'GET'
+        )
+      ).toBe(true);
+    });
+
+    it('should not append testMode param when testMode is false', async () => {
+      mockNetworkClient.setMockResponse(
+        'https://api.example.com/api/v1/ratelimits/my-entity',
+        {
+          ok: true,
+          data: { success: true, data: { limits: {} } },
+        },
+        'GET'
+      );
+
+      const client = new RateLimitClient({
+        baseUrl,
+        networkClient: mockNetworkClient,
+        testMode: false,
+      });
+      await client.getRateLimitsConfig(token, rateLimitUserId);
+
+      expect(
+        mockNetworkClient.wasUrlCalled(
+          'https://api.example.com/api/v1/ratelimits/my-entity',
+          'GET'
+        )
+      ).toBe(true);
+    });
+
+    it('should default testMode to false when not specified', async () => {
+      mockNetworkClient.setMockResponse(
+        'https://api.example.com/api/v1/ratelimits/my-entity',
+        {
+          ok: true,
+          data: { success: true, data: { limits: {} } },
+        },
+        'GET'
+      );
+
+      const client = new RateLimitClient({
+        baseUrl,
+        networkClient: mockNetworkClient,
+      });
+      await client.getRateLimitsConfig(token, rateLimitUserId);
+
+      // Should NOT have testMode in the URL
+      expect(
+        mockNetworkClient.wasUrlCalled(
+          'https://api.example.com/api/v1/ratelimits/my-entity',
           'GET'
         )
       ).toBe(true);

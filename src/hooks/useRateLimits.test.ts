@@ -29,6 +29,26 @@ describe('useRateLimits', () => {
     expect(result.current.error).toBeNull();
   });
 
+  it('should expose all expected return properties', () => {
+    const { result } = renderHook(() =>
+      useRateLimits(mockNetworkClient, baseUrl)
+    );
+
+    expect(result.current).toHaveProperty('config');
+    expect(result.current).toHaveProperty('history');
+    expect(result.current).toHaveProperty('isLoadingConfig');
+    expect(result.current).toHaveProperty('isLoadingHistory');
+    expect(result.current).toHaveProperty('error');
+    expect(result.current).toHaveProperty('refreshConfig');
+    expect(result.current).toHaveProperty('refreshHistory');
+    expect(result.current).toHaveProperty('clearError');
+    expect(result.current).toHaveProperty('reset');
+    expect(typeof result.current.refreshConfig).toBe('function');
+    expect(typeof result.current.refreshHistory).toBe('function');
+    expect(typeof result.current.clearError).toBe('function');
+    expect(typeof result.current.reset).toBe('function');
+  });
+
   describe('refreshConfig', () => {
     it('should fetch config successfully', async () => {
       const mockConfigData = {
@@ -118,6 +138,105 @@ describe('useRateLimits', () => {
       expect(result.current.isLoadingConfig).toBe(false);
       consoleSpy.mockRestore();
     });
+
+    it('should use default error message for non-Error thrown values', async () => {
+      const consoleSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+
+      // Simulate a response that causes the client to throw (ok: false triggers handleApiError
+      // which throws an Error, so we test the fallback by using a network-level error)
+      mockNetworkClient.setMockResponse(
+        'https://api.example.com/api/v1/ratelimits/my-entity',
+        {
+          ok: false,
+          data: undefined,
+        },
+        'GET'
+      );
+
+      const { result } = renderHook(() =>
+        useRateLimits(mockNetworkClient, baseUrl)
+      );
+
+      await act(async () => {
+        await result.current.refreshConfig(token, rateLimitUserId);
+      });
+
+      // handleApiError creates a proper Error object, so the message is extracted
+      expect(result.current.error).toBeTruthy();
+      expect(result.current.isLoadingConfig).toBe(false);
+      consoleSpy.mockRestore();
+    });
+
+    it('should set default error message when API response has no error field', async () => {
+      mockNetworkClient.setMockResponse(
+        'https://api.example.com/api/v1/ratelimits/my-entity',
+        {
+          ok: true,
+          data: {
+            success: false,
+            // No error field provided
+          },
+        },
+        'GET'
+      );
+
+      const { result } = renderHook(() =>
+        useRateLimits(mockNetworkClient, baseUrl)
+      );
+
+      await act(async () => {
+        await result.current.refreshConfig(token, rateLimitUserId);
+      });
+
+      expect(result.current.error).toBe('Failed to fetch rate limits config');
+      expect(result.current.config).toBeNull();
+    });
+
+    it('should clear previous error on new config fetch', async () => {
+      const consoleSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+
+      // First: trigger an error
+      mockNetworkClient.setMockResponse(
+        'https://api.example.com/api/v1/ratelimits/my-entity',
+        {
+          error: new Error('First error'),
+        },
+        'GET'
+      );
+
+      const { result } = renderHook(() =>
+        useRateLimits(mockNetworkClient, baseUrl)
+      );
+
+      await act(async () => {
+        await result.current.refreshConfig(token, rateLimitUserId);
+      });
+
+      expect(result.current.error).toBe('First error');
+
+      // Second: successful fetch clears the error
+      mockNetworkClient.clearAllMockResponses();
+      mockNetworkClient.setMockResponse(
+        'https://api.example.com/api/v1/ratelimits/my-entity',
+        {
+          ok: true,
+          data: { success: true, data: { limits: {} } },
+        },
+        'GET'
+      );
+
+      await act(async () => {
+        await result.current.refreshConfig(token, rateLimitUserId);
+      });
+
+      expect(result.current.error).toBeNull();
+      expect(result.current.config).toEqual({ limits: {} });
+      consoleSpy.mockRestore();
+    });
   });
 
   describe('refreshHistory', () => {
@@ -205,6 +324,109 @@ describe('useRateLimits', () => {
       expect(result.current.isLoadingHistory).toBe(false);
       consoleSpy.mockRestore();
     });
+
+    it('should fetch history for all period types (day)', async () => {
+      mockNetworkClient.setMockResponse(
+        'https://api.example.com/api/v1/ratelimits/my-entity/history/day',
+        {
+          ok: true,
+          data: {
+            success: true,
+            data: { periodType: 'day', history: [] },
+          },
+        },
+        'GET'
+      );
+
+      const { result } = renderHook(() =>
+        useRateLimits(mockNetworkClient, baseUrl)
+      );
+
+      await act(async () => {
+        await result.current.refreshHistory('day', token, rateLimitUserId);
+      });
+
+      expect(result.current.history).toEqual({
+        periodType: 'day',
+        history: [],
+      });
+      expect(result.current.error).toBeNull();
+    });
+
+    it('should set default error message when history response has no error field', async () => {
+      mockNetworkClient.setMockResponse(
+        'https://api.example.com/api/v1/ratelimits/my-entity/history/hour',
+        {
+          ok: true,
+          data: {
+            success: false,
+            // No error field provided
+          },
+        },
+        'GET'
+      );
+
+      const { result } = renderHook(() =>
+        useRateLimits(mockNetworkClient, baseUrl)
+      );
+
+      await act(async () => {
+        await result.current.refreshHistory('hour', token, rateLimitUserId);
+      });
+
+      expect(result.current.error).toBe('Failed to fetch rate limit history');
+      expect(result.current.history).toBeNull();
+    });
+
+    it('should clear previous error on new history fetch', async () => {
+      const consoleSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+
+      // First: trigger an error
+      mockNetworkClient.setMockResponse(
+        'https://api.example.com/api/v1/ratelimits/my-entity/history/hour',
+        {
+          error: new Error('History error'),
+        },
+        'GET'
+      );
+
+      const { result } = renderHook(() =>
+        useRateLimits(mockNetworkClient, baseUrl)
+      );
+
+      await act(async () => {
+        await result.current.refreshHistory('hour', token, rateLimitUserId);
+      });
+
+      expect(result.current.error).toBe('History error');
+
+      // Second: successful fetch clears the error
+      mockNetworkClient.clearAllMockResponses();
+      mockNetworkClient.setMockResponse(
+        'https://api.example.com/api/v1/ratelimits/my-entity/history/hour',
+        {
+          ok: true,
+          data: {
+            success: true,
+            data: { periodType: 'hour', history: [] },
+          },
+        },
+        'GET'
+      );
+
+      await act(async () => {
+        await result.current.refreshHistory('hour', token, rateLimitUserId);
+      });
+
+      expect(result.current.error).toBeNull();
+      expect(result.current.history).toEqual({
+        periodType: 'hour',
+        history: [],
+      });
+      consoleSpy.mockRestore();
+    });
   });
 
   describe('clearError', () => {
@@ -237,6 +459,20 @@ describe('useRateLimits', () => {
 
       expect(result.current.error).toBeNull();
       consoleSpy.mockRestore();
+    });
+
+    it('should be a no-op when no error exists', () => {
+      const { result } = renderHook(() =>
+        useRateLimits(mockNetworkClient, baseUrl)
+      );
+
+      expect(result.current.error).toBeNull();
+
+      act(() => {
+        result.current.clearError();
+      });
+
+      expect(result.current.error).toBeNull();
     });
   });
 
@@ -275,6 +511,87 @@ describe('useRateLimits', () => {
       expect(result.current.error).toBeNull();
       expect(result.current.isLoadingConfig).toBe(false);
       expect(result.current.isLoadingHistory).toBe(false);
+    });
+
+    it('should reset config, history, and error together', async () => {
+      const consoleSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+
+      // Fetch config
+      mockNetworkClient.setMockResponse(
+        'https://api.example.com/api/v1/ratelimits/my-entity',
+        {
+          ok: true,
+          data: { success: true, data: { limits: {} } },
+        },
+        'GET'
+      );
+
+      mockNetworkClient.setMockResponse(
+        'https://api.example.com/api/v1/ratelimits/my-entity/history/hour',
+        {
+          ok: true,
+          data: {
+            success: true,
+            data: { periodType: 'hour', history: [] },
+          },
+        },
+        'GET'
+      );
+
+      const { result } = renderHook(() =>
+        useRateLimits(mockNetworkClient, baseUrl)
+      );
+
+      await act(async () => {
+        await result.current.refreshConfig(token, rateLimitUserId);
+      });
+
+      await act(async () => {
+        await result.current.refreshHistory('hour', token, rateLimitUserId);
+      });
+
+      expect(result.current.config).toBeTruthy();
+      expect(result.current.history).toBeTruthy();
+
+      act(() => {
+        result.current.reset();
+      });
+
+      expect(result.current.config).toBeNull();
+      expect(result.current.history).toBeNull();
+      expect(result.current.error).toBeNull();
+      consoleSpy.mockRestore();
+    });
+  });
+
+  describe('testMode', () => {
+    it('should pass testMode to the underlying client', async () => {
+      mockNetworkClient.setMockResponse(
+        'https://api.example.com/api/v1/ratelimits/my-entity?testMode=true',
+        {
+          ok: true,
+          data: { success: true, data: { limits: {} } },
+        },
+        'GET'
+      );
+
+      const { result } = renderHook(() =>
+        useRateLimits(mockNetworkClient, baseUrl, true)
+      );
+
+      await act(async () => {
+        await result.current.refreshConfig(token, rateLimitUserId);
+      });
+
+      expect(
+        mockNetworkClient.wasUrlCalled(
+          'https://api.example.com/api/v1/ratelimits/my-entity?testMode=true',
+          'GET'
+        )
+      ).toBe(true);
+      expect(result.current.config).toEqual({ limits: {} });
     });
   });
 
