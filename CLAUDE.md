@@ -132,20 +132,6 @@ shapeshyft_app (frontend)
 sudojo_app (frontend)
 ```
 
-## Testing
-
-Uses Vitest with mock network client:
-
-```bash
-bun run test         # Run tests
-```
-
-Test coverage includes:
-- Config fetching with rateLimitUserId
-- History fetching for all period types
-- Error handling (network errors, API errors)
-- URL encoding for special characters
-
 ## Workspace Context
 
 This project is part of the **ShapeShyft** multi-project workspace at the parent directory. See `../CLAUDE.md` for the full architecture, dependency graph, and build order.
