@@ -1,6 +1,6 @@
 {
   "name": "@sudobility/ratelimit_client",
-  "version": "0.0.50",
+  "version": "0.0.51",
   "description": "React client library for Rate Limit API with TanStack Query hooks",
   "type": "module",
   "main": "dist/index.js",
@@ -34,14 +34,14 @@
   "author": "John Huang",
   "license": "BUSL-1.1",
   "peerDependencies": {
-    "@sudobility/types": "^1.9.59",
+    "@sudobility/types": "^1.9.60",
     "@tanstack/react-query": ">=5.0.0",
     "react": ">=18.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
-    "@sudobility/di": "^1.5.48",
-    "@sudobility/types": "^1.9.59",
+    "@sudobility/di": "^1.5.49",
+    "@sudobility/types": "^1.9.60",
     "@tanstack/react-query": "^5.90.5",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.1",
@@ -59,5 +59,9 @@
     "react-dom": "^19.2.1",
     "typescript": "^5.9.3",
     "vitest": "^4.0.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/johnqh/ratelimit_client.git"
   }
 }
