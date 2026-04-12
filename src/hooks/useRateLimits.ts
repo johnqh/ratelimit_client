@@ -56,7 +56,7 @@ export interface UseRateLimitsReturn {
    * @param rateLimitUserId - Identifier for rate limit lookup (e.g., entity slug, user ID)
    */
   refreshHistory: (
-    periodType: RateLimitPeriodType | 'hour' | 'day' | 'month',
+    periodType: RateLimitPeriodType,
     token: FirebaseIdToken,
     rateLimitUserId: string
   ) => Promise<void>;
@@ -178,7 +178,7 @@ export const useRateLimits = (
    */
   const refreshHistory = useCallback(
     async (
-      periodType: RateLimitPeriodType | 'hour' | 'day' | 'month',
+      periodType: RateLimitPeriodType,
       token: FirebaseIdToken,
       rateLimitUserId: string
     ): Promise<void> => {

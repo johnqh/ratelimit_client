@@ -1,4 +1,5 @@
 import type {
+  BaseResponse,
   NetworkClient,
   RateLimitHistoryData,
   RateLimitPeriodType,
@@ -6,26 +7,6 @@ import type {
 } from '@sudobility/types';
 import type { FirebaseIdToken } from '../types';
 import { buildUrl, createAuthHeaders, handleApiError } from '../utils';
-
-/**
- * Standard API response wrapper matching `BaseResponse` from `@sudobility/types`.
- *
- * @description Wraps all API responses with a consistent structure containing
- * a `success` flag, optional typed `data` payload, optional `error` message,
- * and optional ISO 8601 `timestamp`.
- *
- * @typeParam T - The type of the `data` payload
- */
-interface BaseResponse<T> {
-  /** Whether the API request was successful */
-  success: boolean;
-  /** The typed response payload, present when `success` is `true` */
-  data?: T;
-  /** Error message, present when `success` is `false` */
-  error?: string;
-  /** ISO 8601 timestamp of the response */
-  timestamp?: string;
-}
 
 /**
  * HTTP client for the Rate Limit API.
@@ -178,7 +159,7 @@ export class RateLimitClient {
    * ```
    */
   async getRateLimitHistory(
-    periodType: RateLimitPeriodType | 'hour' | 'day' | 'month',
+    periodType: RateLimitPeriodType,
     token: FirebaseIdToken,
     rateLimitUserId: string
   ): Promise<BaseResponse<RateLimitHistoryData>> {
