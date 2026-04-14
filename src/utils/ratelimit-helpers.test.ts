@@ -94,7 +94,9 @@ describe('handleApiError', () => {
     const error = handleApiError(response, 'get rate limits');
 
     expect(error).toBeInstanceOf(Error);
-    expect(error.message).toBe('Failed to get rate limits: Rate limit exceeded');
+    expect(error.message).toBe(
+      'Failed to get rate limits: Rate limit exceeded'
+    );
   });
 
   it('should extract error from response.data.message', () => {

@@ -408,7 +408,9 @@ describe('RateLimitClient', () => {
 
       await expect(
         client.getRateLimitHistory('hour', token, rateLimitUserId)
-      ).rejects.toThrow('Failed to get rate limit history: Invalid period type');
+      ).rejects.toThrow(
+        'Failed to get rate limit history: Invalid period type'
+      );
     });
 
     it('should throw error when history response data is missing', async () => {
