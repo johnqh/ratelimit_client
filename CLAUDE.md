@@ -1,5 +1,10 @@
 # RateLimit Client
 
+> **Git policy — never auto-commit or auto-push.** Leave your work in the working tree.
+> Run `git commit`, `git push`, `gh pr create`, or `scripts/push_all.sh` **only when the user
+> explicitly asks in that turn**. Approval for an earlier change does not carry forward, and
+> finishing a task is not permission to commit it.
+
 React client library for Rate Limit API with hooks for fetching rate limit config and history.
 
 **npm**: `@sudobility/ratelimit_client`
@@ -180,3 +185,7 @@ Note: `bun run test` here runs once (not watch mode) due to `vitest run --enviro
 - **`rateLimitUserId` is a generic identifier** -- it can be an entity slug, user ID, or any identifier. Do not assume it is always a Firebase UID.
 - **Tests require jsdom environment** -- the test script passes `--environment jsdom`. Tests run in a browser-like environment.
 - **Types come from `@sudobility/types`, not this package** -- `RateLimitsConfigData`, `RateLimitHistoryData`, etc. are in the shared types package.
+
+## Git Workflow
+
+- Do not use feature branches for code changes. Always stay on the current branch.
