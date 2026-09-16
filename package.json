@@ -16,7 +16,7 @@
     "build:watch": "bunx tsc --watch",
     "clean": "rm -rf dist",
     "prepublishOnly": "bun run clean && bun run build",
-    "test": "vitest run --environment jsdom",
+    "test:unit": "vitest run --environment jsdom",
     "test:watch": "vitest --environment jsdom",
     "lint": "bunx eslint src --ext .ts,.tsx",
     "lint:fix": "bunx eslint src --ext .ts,.tsx --fix",
